@@ -1,0 +1,47 @@
+name: spray_system_control
+description: "A new Flutter project."
+
+publish_to: 'none' 
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Contrôles
+  flutter_joystick: ^0.2.2
+  http: ^1.1.0 # Pour les requêtes HTTP
+   # Pour la gestion d'état (très important !)
+  provider: ^6.1.1
+  simple_animations: ^5.2.0
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+# DEPENDANCES DE DEVELOPPEMENT
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# CONFIGURATION FLUTTER
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+#---------------------------------------------------
+# CONFIGURATION POUR LES ICONES
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/launcher_icon/my_logo.png"
+  min_sdk_android: 21
