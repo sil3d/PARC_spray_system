@@ -1,7 +1,10 @@
-// Ce fichier définit simplement la structure de données pour l'état de notre système.
 class SystemState {
   String mode = 'manual';
   bool isSystemRunning = false;
+  // <<< AJOUTS ICI >>>
+  bool isManualSweepActive = false;
+  bool isTemperatureAlert = false;
+  // <<< FIN DES AJOUTS >>>
   bool isMiniPump1On = false;
   bool isMiniPump2On = false;
   bool isMainPumpOn = false;

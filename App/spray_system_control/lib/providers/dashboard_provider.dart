@@ -10,10 +10,9 @@ class DashboardProvider with ChangeNotifier {
   Timer? _telemetryTimer;
   bool _isConnecting = false;
 
-  // Pour le throttling du joystick
   int _lastJoystickSendTime = 0;
+  static const int joystickThrottleInterval = 100;
 
-  // Variables pour la calibration des servos
   double _panMinAngle = 0;
   double _panMaxAngle = 180;
   double _tiltMinAngle = 30;
@@ -36,14 +35,16 @@ class DashboardProvider with ChangeNotifier {
     super.dispose();
   }
 
-  // --- Fonctions de lecture et de commande ---
-
   Future<void> _fetchTelemetry() async {
     final response = await _apiService.fetchTelemetry();
     if (response != null && response.statusCode == 200) {
       final data = jsonDecode(response.body);
       _systemState.mode = data['mode'] ?? 'manual';
       _systemState.isSystemRunning = data['system_running'] ?? false;
+      // <<< AJOUTS ICI >>>
+      _systemState.isManualSweepActive = data['manual_sweep_active'] ?? false;
+      _systemState.isTemperatureAlert = data['temperature_alert'] ?? false;
+      // <<< FIN DES AJOUTS >>>
       _systemState.isMiniPump1On = data['mini_pump1_on'] ?? false;
       _systemState.isMiniPump2On = data['mini_pump2_on'] ?? false;
       _systemState.isMainPumpOn = data['main_pump_on'] ?? false;
@@ -69,29 +70,32 @@ class DashboardProvider with ChangeNotifier {
   Future<void> _executeCommand(
     String endpoint, {
     Map<String, String>? params,
+    bool showIndicator = false,
   }) async {
-    _isConnecting = true;
-    notifyListeners();
+    if (showIndicator) {
+      _isConnecting = true;
+      notifyListeners();
+    }
 
     final response = await _apiService.sendCommand(endpoint, params: params);
 
-    _isConnecting = false;
+    if (showIndicator) {
+      _isConnecting = false;
+    }
+
     if (response != null && response.statusCode == 200) {
-      await _fetchTelemetry();
+      await _fetchTelemetry(); // Toujours mettre à jour l'état après une commande réussie
     } else {
-      notifyListeners();
+      notifyListeners(); // Mettre à jour pour enlever l'indicateur même en cas d'échec
     }
   }
 
-  // --- Logique métier ---
-
-  void changeMode(bool isAuto) {
-    _executeCommand('setMode', params: {'mode': isAuto ? 'auto' : 'manual'});
-  }
-
-  void emergencyStop() {
-    _executeCommand('stopSystem');
-  }
+  void changeMode(bool isAuto) => _executeCommand(
+    'setMode',
+    params: {'mode': isAuto ? 'auto' : 'manual'},
+    showIndicator: true,
+  );
+  void emergencyStop() => _executeCommand('stopSystem', showIndicator: true);
 
   void controlPump(String pumpId, bool state) {
     if (systemState.mode == 'manual') {
@@ -103,20 +107,18 @@ class DashboardProvider with ChangeNotifier {
   }
 
   void controlJoystick(double panX, double tiltY) {
-    if (systemState.mode == 'manual') {
-      // Throttling : n'envoie la commande que toutes les 100ms max
-      if (DateTime.now().millisecondsSinceEpoch - _lastJoystickSendTime < 100) {
-        return; // Trop tôt, on ignore
+    if (systemState.mode == 'manual' && !systemState.isManualSweepActive) {
+      if (DateTime.now().millisecondsSinceEpoch - _lastJoystickSendTime <
+          joystickThrottleInterval) {
+        return;
       }
       _lastJoystickSendTime = DateTime.now().millisecondsSinceEpoch;
 
-      // Ici, le mapping sera plus simple, on envoie directement à l'ESP qui gère les deux servos.
       _executeCommand(
         'joystick',
         params: {
           'panX': panX.toStringAsFixed(2),
           'tiltY': tiltY.toStringAsFixed(2),
-          // On pourrait garder panY et tiltX pour des fonctions futures
           'panY': '0.0',
           'tiltX': '0.0',
         },
@@ -124,18 +126,35 @@ class DashboardProvider with ChangeNotifier {
     }
   }
 
-  void updatePanCalibration(RangeValues values) {
-    _panMinAngle = values.start;
-    _panMaxAngle = values.end;
-    notifyListeners();
-    // Potentiellement, envoyer ces nouvelles limites à l'ESP32 pour qu'il les respecte
-    // _executeCommand('setPanLimits', params: {'min': '$_panMinAngle', 'max': '$_panMaxAngle'});
+  void toggleManualSweep(bool enable) {
+    if (systemState.mode == 'manual') {
+      _executeCommand(
+        'setManualSweep',
+        params: {'state': enable ? 'on' : 'off'},
+        showIndicator: true,
+      );
+    }
   }
 
-  void updateTiltCalibration(RangeValues values) {
-    _tiltMinAngle = values.start;
-    _tiltMaxAngle = values.end;
+  void updateServoLimits(
+    double panMin,
+    double panMax,
+    double tiltMin,
+    double tiltMax,
+  ) {
+    _panMinAngle = panMin;
+    _panMaxAngle = panMax;
+    _tiltMinAngle = tiltMin;
+    _tiltMaxAngle = tiltMax;
+    _executeCommand(
+      'setServoLimits',
+      params: {
+        'panMin': panMin.round().toString(),
+        'panMax': panMax.round().toString(),
+        'tiltMin': tiltMin.round().toString(),
+        'tiltMax': tiltMax.round().toString(),
+      },
+    );
     notifyListeners();
-    // _executeCommand('setTiltLimits', params: {'min': '$_tiltMinAngle', 'max': '$_tiltMaxAngle'});
   }
 }

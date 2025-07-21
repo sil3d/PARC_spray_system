@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 
 class TemperatureGauge extends StatelessWidget {
+  final bool isAlert; // Ajouter ce paramètre
   final double? temperature;
   final double? humidity;
 
-  const TemperatureGauge({super.key, this.temperature, this.humidity});
+  const TemperatureGauge({
+    super.key,
+    this.temperature,
+    this.humidity,
+    this.isAlert = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: isAlert ? const Color.fromARGB(255, 175, 4, 21) : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
         child: Row(

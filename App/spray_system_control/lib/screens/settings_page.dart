@@ -16,7 +16,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Initialise les valeurs des sliders avec celles du provider
     final provider = context.read<DashboardProvider>();
     _panRange = RangeValues(provider.panMinAngle, provider.panMaxAngle);
     _tiltRange = RangeValues(provider.tiltMinAngle, provider.tiltMaxAngle);
@@ -32,7 +31,6 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.all(16.0),
         children: [
           _buildSectionHeader('Servo Calibration'),
-          // Pan Axis Calibration
           Text(
             'Pan Axis Range (${_panRange.start.round()}° - ${_panRange.end.round()}°)',
           ),
@@ -49,12 +47,18 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() => _panRange = values);
             },
             onChangeEnd: (values) {
-              // Applique la calibration quand l'utilisateur a fini de glisser
-              provider.updatePanCalibration(values);
+              // <<< CORRECTION HERE >>>
+              // Call the unified update function
+              provider.updateServoLimits(
+                values.start,
+                values.end,
+                _tiltRange.start,
+                _tiltRange.end,
+              );
+              // <<< END CORRECTION >>>
             },
           ),
           const SizedBox(height: 20),
-          // Tilt Axis Calibration
           Text(
             'Tilt Axis Range (${_tiltRange.start.round()}° - ${_tiltRange.end.round()}°)',
           ),
@@ -71,7 +75,15 @@ class _SettingsPageState extends State<SettingsPage> {
               setState(() => _tiltRange = values);
             },
             onChangeEnd: (values) {
-              provider.updateTiltCalibration(values);
+              // <<< CORRECTION HERE >>>
+              // Call the unified update function
+              provider.updateServoLimits(
+                _panRange.start,
+                _panRange.end,
+                values.start,
+                values.end,
+              );
+              // <<< END CORRECTION >>>
             },
           ),
           const Divider(height: 40),
@@ -84,7 +96,7 @@ class _SettingsPageState extends State<SettingsPage> {
               context,
               title: 'WiFi Hotspot Info',
               content:
-                  'Connect your device to the following network:\n\nSSID: ESP32_Spray_Control\nPassword: votre_mot_de_passe\n\nApp IP Address: 192.168.4.1',
+                  'Connect your device to the following network:\n\nSSID: ESP32_Spray_Control\nPassword: password123\n\nApp IP Address: 192.168.4.1',
             ),
           ),
           ListTile(

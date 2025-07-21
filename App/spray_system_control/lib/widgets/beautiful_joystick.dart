@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+// import 'dart:math'; // <<< SUPPRESSION DE L'IMPORT INUTILISÉ
 
-// Un callback qui renvoie les valeurs normalisées x et y (-1.0 à 1.0)
 typedef JoystickCallback = void Function(double x, double y);
 
 class BeautifulJoystick extends StatefulWidget {
@@ -25,12 +24,9 @@ class BeautifulJoystick extends StatefulWidget {
 }
 
 class _BeautifulJoystickState extends State<BeautifulJoystick> {
-  // Offset pour la position du stick, (0,0) est le centre
   Offset _stickOffset = Offset.zero;
 
-  // Calcul du rayon maximal du mouvement du stick
   double get _maxRadius => widget.size / 2 - _stickSize / 2;
-  // Taille du stick (la partie mobile)
   double get _stickSize => widget.size / 2;
 
   void _handleDragStart(DragStartDetails details) {
@@ -42,41 +38,31 @@ class _BeautifulJoystickState extends State<BeautifulJoystick> {
     if (!widget.isEnabled) return;
     _updateStickPosition(details.localPosition);
 
-    // Notifier le listener avec les valeurs normalisées
     final double normalizedX = (_stickOffset.dx / _maxRadius).clamp(-1.0, 1.0);
     final double normalizedY = (_stickOffset.dy / _maxRadius).clamp(-1.0, 1.0);
-    widget.listener(
-      normalizedX,
-      -normalizedY,
-    ); // On inverse Y pour que "haut" soit positif
+    widget.listener(normalizedX, -normalizedY);
   }
 
   void _handleDragEnd(DragEndDetails details) {
     if (!widget.isEnabled) return;
 
-    // Animer le retour au centre
     setState(() {
       _stickOffset = Offset.zero;
     });
 
-    // Notifier une dernière fois avec la position centrale
     widget.listener(0.0, 0.0);
   }
 
   void _updateStickPosition(Offset localPosition) {
-    // Le centre du widget est à (size/2, size/2)
     final Offset center = Offset(widget.size / 2, widget.size / 2);
     final Offset vector = localPosition - center;
 
-    // Limiter la distance du stick au rayon maximal
     final double distance = vector.distance;
     if (distance > _maxRadius) {
-      // Le stick a dépassé le cercle, on le ramène sur le bord
       setState(() {
-        _stickOffset = vector / distance * _maxRadius;
+        _stickOffset = Offset.fromDirection(vector.direction, _maxRadius);
       });
     } else {
-      // Le stick est à l'intérieur, on met à jour sa position
       setState(() {
         _stickOffset = vector;
       });
@@ -104,16 +90,14 @@ class _BeautifulJoystickState extends State<BeautifulJoystick> {
             stops: const [0.0, 0.7, 1.0],
           ),
           boxShadow: [
-            // Ombre intérieure pour un effet de profondeur
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withAlpha(102), // <<< CORRECTION
               offset: const Offset(4, 4),
               blurRadius: 8,
               spreadRadius: 1,
             ),
-            // Ombre extérieure douce
             BoxShadow(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withAlpha(179), // <<< CORRECTION
               offset: const Offset(-4, -4),
               blurRadius: 8,
               spreadRadius: 1,
@@ -121,7 +105,6 @@ class _BeautifulJoystickState extends State<BeautifulJoystick> {
           ],
         ),
         child: Center(
-          // AnimatedContainer permet une transition fluide lors du retour au centre
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
@@ -148,7 +131,7 @@ class _BeautifulJoystickState extends State<BeautifulJoystick> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withAlpha(128), // <<< CORRECTION
                     blurRadius: 5,
                     offset: const Offset(3, 3),
                   ),
@@ -161,7 +144,6 @@ class _BeautifulJoystickState extends State<BeautifulJoystick> {
     );
   }
 
-  // Fonctions utilitaires pour éclaircir et assombrir les couleurs
   Color _lighten(Color color, [double amount = .1]) {
     assert(amount >= 0 && amount <= 1);
     final hsl = HSLColor.fromColor(color);

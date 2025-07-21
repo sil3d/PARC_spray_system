@@ -11,7 +11,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  static const List<Widget> _pages = <Widget>[DashboardPage(), SettingsPage()];
+  // <<< CORRECTION ICI >>>
+  static const List<Widget> _pages = <Widget>[
+    DashboardPage(), // Ajouter 'const' ici
+    SettingsPage(), // Et ici
+  ];
+  // <<< FIN DE LA CORRECTION >>>
 
   void _onItemTapped(int index) {
     setState(() {

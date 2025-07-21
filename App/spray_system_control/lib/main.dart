@@ -18,21 +18,21 @@ class MyApp extends StatelessWidget {
         title: 'Spray System Control',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green.shade800),
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.green.shade800,
-            foregroundColor: Colors.white,
-            elevation: 4,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2E7D32), // Vert profond
+            brightness: Brightness.light,
+            primary: const Color(0xFF2E7D32),
+            secondary: const Color(0xFFFFA000), // Ambre/Orange pour les accents
           ),
-          // <<< THIS IS THE DEFINITIVELY CORRECTED LINE >>>
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
+          ),
           cardTheme: CardThemeData(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             margin: const EdgeInsets.symmetric(vertical: 8.0),
           ),
-          // <<< END OF CORRECTION >>>
         ),
         home: const SplashScreen(),
         debugShowCheckedModeBanner: false,
